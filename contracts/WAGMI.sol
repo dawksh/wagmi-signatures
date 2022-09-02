@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.9;
+pragma solidity >=0.8.10;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@worldcoin/world-id-contracts/interfaces/IWorldID.sol";
-import {ByteHasher} from "@worldcoin/world-id-contracts/libraries/ByteHasher.sol";
+import "./interfaces/IWorldID.sol";
+import {ByteHasher} from "./helpers/ByteHasher.sol";
 
 contract WAGMI {
     using ByteHasher for bytes;
