@@ -16,19 +16,31 @@ contract WAGMI {
         bytes signature;
     }
 
+    struct UnSignedAgreement {
+        uint256 id;
+        address signer;
+        string agreement;
+        bytes signature;
+        bool isSigned;
+    }
+
     mapping(address => Agreement[]) public signerToAgreementMapping;
+    mapping(uint256 => UnSignedAgreement) public indexToAgreementStorage;
 
     uint256 immutable groupId;
     uint256 immutable actionId;
     IWorldID worldId;
+    uint256 index;
 
     // Errors
 
     error IncorrectSigner();
+    error IncorrectSignee();
 
     // Events
 
     event Signed(string message, address signer);
+    event AgreementAdded(string agreement, address signer);
 
     // Logic
     constructor(
@@ -39,6 +51,17 @@ contract WAGMI {
         worldId = _worldId;
         groupId = _groupId;
         actionId = abi.encodePacked(_actionId).hashToField();
+    }
+
+    function addAgreement(UnSignedAgreement calldata _agreement) external {
+        address sig = recoverAddress(
+            _agreement.agreement,
+            _agreement.signature
+        );
+        if (sig != msg.sender) revert IncorrectSignee();
+        indexToAgreementStorage[index] = _agreement;
+        index++;
+        emit AgreementAdded(_agreement.agreement, sig);
     }
 
     function recoverAddress(string calldata message, bytes calldata sig)
@@ -85,11 +108,11 @@ contract WAGMI {
 
     function verifyAgreement(
         address signer,
-        uint256 index,
+        uint256 _index,
         string calldata agreement
     ) external view returns (bool) {
         Agreement memory tempAgreement = signerToAgreementMapping[signer][
-            index
+            _index
         ];
         string memory _agreement = tempAgreement.agreement;
         if (
