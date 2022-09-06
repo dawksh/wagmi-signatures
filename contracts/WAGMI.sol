@@ -39,7 +39,7 @@ contract WAGMI {
 
     // Events
 
-    event Signed(string message, address signer);
+    event Signed(string message, address signer, uint256 id);
     event AgreementAdded(string agreement, address signer, uint256 id);
 
     // Logic
@@ -102,7 +102,7 @@ contract WAGMI {
             );
             signerToAgreementMapping[msg.sender].push(_agreement);
             indexToAgreementStorage[id].isSigned = true;
-            emit Signed(message, msg.sender);
+            emit Signed(message, msg.sender, id);
         } else {
             revert IncorrectSigner();
         }

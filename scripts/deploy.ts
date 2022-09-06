@@ -1,23 +1,22 @@
 import { ethers } from "hardhat";
+require("dotenv").config();
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+	const WAGMI = await ethers.getContractFactory("WAGMI");
+	const lock = await WAGMI.deploy(
+		"0xABB70f7F39035586Da57B3c8136035f87AC0d2Aa",
+		1,
+		process.env.ACTION_ID as string
+	);
 
-  const lockedAmount = ethers.utils.parseEther("1");
+	await lock.deployed();
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(`Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`);
+	console.log(`Wagmi deployed to ${lock.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+	console.error(error);
+	process.exitCode = 1;
 });
