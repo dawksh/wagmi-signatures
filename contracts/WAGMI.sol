@@ -40,7 +40,7 @@ contract WAGMI {
     // Events
 
     event Signed(string message, address signer);
-    event AgreementAdded(string agreement, address signer);
+    event AgreementAdded(string agreement, address signer, uint256 id);
 
     // Logic
     constructor(
@@ -60,8 +60,8 @@ contract WAGMI {
         );
         if (sig != msg.sender) revert IncorrectSignee();
         indexToAgreementStorage[index] = _agreement;
+        emit AgreementAdded(_agreement.agreement, sig, index);
         index++;
-        emit AgreementAdded(_agreement.agreement, sig);
     }
 
     function recoverAddress(string calldata message, bytes calldata sig)
@@ -77,6 +77,7 @@ contract WAGMI {
     function signAgreement(
         string calldata message,
         bytes calldata signature,
+        uint256 id,
         address receiver,
         uint256 root,
         uint256 nullifierHash,
@@ -100,6 +101,7 @@ contract WAGMI {
                 signature
             );
             signerToAgreementMapping[msg.sender].push(_agreement);
+            indexToAgreementStorage[id].isSigned = true;
             emit Signed(message, msg.sender);
         } else {
             revert IncorrectSigner();
