@@ -14,18 +14,10 @@ contract WAGMI {
         address signer;
         string agreement;
         bytes signature;
-    }
-
-    struct UnSignedAgreement {
-        uint256 id;
-        address signer;
-        string agreement;
-        bytes signature;
         bool isSigned;
     }
 
-    mapping(address => Agreement[]) public signerToAgreementMapping;
-    mapping(uint256 => UnSignedAgreement) public indexToAgreementStorage;
+    mapping(uint256 => Agreement) public indexToAgreementStorage;
 
     uint256 immutable groupId;
     uint256 immutable actionId;
@@ -53,14 +45,15 @@ contract WAGMI {
         actionId = abi.encodePacked(_actionId).hashToField();
     }
 
-    function addAgreement(UnSignedAgreement calldata _agreement) external {
+    function addAgreement(Agreement calldata _agreement) external {
         address sig = recoverAddress(
             _agreement.agreement,
             _agreement.signature
         );
         if (sig != msg.sender) revert IncorrectSignee();
+        if (msg.sender == _agreement.signer) revert IncorrectSignee();
         indexToAgreementStorage[index] = _agreement;
-        emit AgreementAdded(_agreement.agreement, sig, index);
+        emit AgreementAdded(_agreement.agreement, msg.sender, index);
         index++;
     }
 
@@ -74,11 +67,19 @@ contract WAGMI {
         return _sig;
     }
 
+        function recoverAddress(string storage message, bytes calldata sig)
+        internal
+        pure
+        returns (address)
+    {
+        bytes32 hash = ECDSA.toEthSignedMessageHash(abi.encodePacked(message));
+        address _sig = ECDSA.recover(hash, sig);
+        return _sig;
+    }
+
     function signAgreement(
-        string calldata message,
         bytes calldata signature,
         uint256 id,
-        address receiver,
         uint256 root,
         uint256 nullifierHash,
         uint256[8] calldata proof
@@ -86,21 +87,16 @@ contract WAGMI {
         worldId.verifyProof(
             root,
             groupId,
-            abi.encodePacked(receiver).hashToField(), // The signal of the proof
+            abi.encodePacked(msg.sender).hashToField(), // The signal of the proof
             nullifierHash,
             actionId,
             proof
         );
+        string storage message = indexToAgreementStorage[id].agreement;
+        address signer = indexToAgreementStorage[id].signer;
+        if(msg.sender != signer) revert IncorrectSigner();
         address _signer = recoverAddress(message, signature);
         if (_signer == msg.sender) {
-            uint256 len = signerToAgreementMapping[msg.sender].length;
-            Agreement memory _agreement = Agreement(
-                len,
-                msg.sender,
-                message,
-                signature
-            );
-            signerToAgreementMapping[msg.sender].push(_agreement);
             indexToAgreementStorage[id].isSigned = true;
             emit Signed(message, msg.sender, id);
         } else {
@@ -109,13 +105,10 @@ contract WAGMI {
     }
 
     function verifyAgreement(
-        address signer,
-        uint256 _index,
+        uint256 id,
         string calldata agreement
     ) external view returns (bool) {
-        Agreement memory tempAgreement = signerToAgreementMapping[signer][
-            _index
-        ];
+        Agreement memory tempAgreement = indexToAgreementStorage[id];
         string memory _agreement = tempAgreement.agreement;
         if (
             keccak256(abi.encodePacked(_agreement)) ==
@@ -127,3 +120,4 @@ contract WAGMI {
         }
     }
 }
+
