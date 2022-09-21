@@ -2,4 +2,4 @@
 
 A signature protocol used for signing agreements on chain!
 
-Contract from [commit](https://github.com/dawksh/wagmi-signatures/commit/064e5935f89ef94aec68d3a5754f54b6a1cffedd) is [here](https://mumbai.polygonscan.com/address/0xC70b8Db42e3658fC8a3615451e93AaF614a8abFD)
+Contract from [commit](https://github.com/dawksh/wagmi-signatures/commit/c1bbad8bf461dc18e28860c04922992788d0627f) is [here](https://mumbai.polygonscan.com/address/0xCb4aD097Aa4E40756EfFaEa3085F1a910DdEd375)
